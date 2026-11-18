@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{TITLE}} | Campus Assistant</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+    .layout { display: flex; gap: 2rem; align-items: flex-start; }
+    .sources { flex: 1; }
+  </style>
+</head>
+<body>
+  <a href="/">All services</a>
+  <h1>{{TITLE}}</h1>
+  <p>{{DESCRIPTION}}</p>
+  <div class="layout">
+    <section class="sources">
+      <h2>Sources</h2>
+      <ul>
+        {{SOURCES}}
+      </ul>
+    </section>
+    <section>
+      <button id="open-chat" hidden>Open chat</button>
+      <iframe
+        id="chat"
+        src="{{CHAT_URL}}"
+        width="400"
+        height="600"
+        frameborder="0"
+        allow="local-network-access *; clipboard-read *; clipboard-write *"
+        allowfullscreen>
+      </iframe>
+    </section>
+  </div>
+  <script>
+    const chat = document.getElementById('chat');
+    const openChat = document.getElementById('open-chat');
+
+    window.addEventListener('message', (event) => {
+      if (event.source !== chat.contentWindow) return;
+      if (event.data && event.data.type === 'BOX_AI_CHAT_CLOSE') {
+        chat.hidden = true;
+        openChat.hidden = false;
+      }
+    });
+
+    openChat.addEventListener('click', () => {
+      chat.hidden = false;
+      openChat.hidden = true;
+    });
+  </script>
+</body>
+</html>

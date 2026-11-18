@@ -1,0 +1,4 @@
+# Same versions as the tutorial (Python 3.11+).
+boxsdk~=10.0
+Flask>=3.1.0
+python-dotenv>=1.0.0

@@ -1,0 +1,17 @@
+{
+  "campusHubId": "0",
+  "services": [
+    {
+      "slug": "admissions",
+      "title": "Admissions",
+      "description": "Application deadlines, requirements, and enrollment steps.",
+      "hubId": "0"
+    },
+    {
+      "slug": "housing",
+      "title": "Housing",
+      "description": "Residence halls, move-in dates, and housing policies.",
+      "hubId": "0"
+    }
+  ]
+}

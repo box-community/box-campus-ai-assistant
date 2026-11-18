@@ -1,0 +1,20 @@
+{
+  "campusHub": {
+    "title": "Campus Assistant",
+    "description": "Answers from every student service."
+  },
+  "services": [
+    {
+      "slug": "admissions",
+      "title": "Admissions",
+      "description": "Application deadlines, requirements, and enrollment steps.",
+      "folderId": "<ADMISSIONS_FOLDER_ID>"
+    },
+    {
+      "slug": "housing",
+      "title": "Housing",
+      "description": "Residence halls, move-in dates, and housing policies.",
+      "folderId": "<HOUSING_FOLDER_ID>"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Campus Assistant</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+    .services { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+    .services li { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Campus Assistant</h1>
+  <p>Choose a student service, or select <strong>Ask the campus</strong> to ask about anything.</p>
+  <ul class="services">
+    {{SERVICE_CARDS}}
+  </ul>
+  <script
+    src="{{CHAT_BUTTON_SCRIPT}}"
+    data-hub-id="{{CAMPUS_HUB_ID}}"
+    data-custom-box-domain="{{EMBED_DOMAIN}}"
+    data-button-text="Ask the campus">
+  </script>
+</body>
+</html>
