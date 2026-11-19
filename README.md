@@ -33,6 +33,8 @@ methods.
 ```text
 box-campus-ai-assistant/
 ├── box_client.py               # CCG service account auth
+├── seed.py                     # Creates sample folders, documents, and the students group
+├── sample-docs/                # Fictional Admissions and Housing documents for seed.py
 ├── hubs.py                     # Create or reuse hubs, add folders and collaborators
 ├── provision_hubs.py           # Provisions every hub from hubs.config.json
 ├── portal.py                   # Flask portal that embeds Hubs AI Chat
@@ -56,8 +58,9 @@ box-campus-ai-assistant/
 - A **Client Credentials Grant (CCG)** Platform App, **authorized** in the
   Admin Console, with these scopes enabled:
   - **Read and write all files and folders stored in Box**
-  - **Manage groups**, so that the script can invite the students group to
-    the service folders
+  - **Manage groups**, so that the scripts can create the students group and
+    invite it to the service folders
+  - **Manage users**, so that `seed.py` can find your test student by email
 - Every student who uses the portal needs a Box account in your enterprise and
   must be signed in to Box in the same browser.
 
@@ -78,47 +81,70 @@ box-campus-ai-assistant/
    python -m pip install -r requirements.txt
    ```
 
-3. **Create the service folders** in Box: `Admissions` and `Housing`. Upload
-   each office's documents, such as application deadlines to `Admissions` and
-   move-in dates to `Housing`. Note each folder ID from the URL
-   (`https://app.box.com/folder/123456789` > `123456789`).
-
-   **Critical:** invite the app's service account as an **Editor** on both
-   folders. Find the service account email in Developer Console > your app >
-   **Configuration** > **App Details** sidebar > **Service Account ID** (looks
-   like `AutomationUser_xxxxx_xxxxxx@boxdevedition.com`). Without this
-   collaboration, API calls return `404 Not Found`. Editor access is required
-   because the script invites the students group to the folders.
-
-4. **Create the students group** (requires Admin access). In the
-   [Admin Console](https://app.box.com/master), select **Users & Groups** >
-   **Groups**, create a group called `Students`, and add the students who use
-   the portal. For testing, add one Box user who is not an admin. Find the
-   group ID with the list groups endpoint:
-
-   ```bash
-   curl "https://api.box.com/2.0/groups?filter_term=Students" \
-     -H "Authorization: Bearer <DEVELOPER_TOKEN>"
-   ```
-
-5. **Choose the hub admin**: the Box user who maintains student-facing
-   content. The script adds them as a co-owner of every hub so they can manage
-   the hubs in the Box web app.
-
-6. **Configure credentials**
+3. **Configure credentials**
 
    ```bash
    cp .env.example .env
    ```
 
-   Edit `.env` and fill in `BOX_CLIENT_ID`, `BOX_CLIENT_SECRET`,
-   `BOX_ENTERPRISE_ID`, `STUDENTS_GROUP_ID`, and `HUB_ADMIN_LOGIN`. If your
-   enterprise uses a custom Box domain, set `BOX_EMBED_DOMAIN` to it.
+   Edit `.env` and fill in:
+
+   - `BOX_CLIENT_ID`, `BOX_CLIENT_SECRET`, and `BOX_ENTERPRISE_ID`
+   - `HUB_ADMIN_LOGIN`: the Box user who maintains student-facing content.
+     The scripts give them access to the folders and make them a co-owner of
+     every hub, so they can manage both in the Box web app.
+   - `TEST_STUDENT_LOGIN`: a Box user in your enterprise who is not an admin.
+     You sign in as this user to test the portal.
+
+   Leave `STUDENTS_GROUP_ID` empty. If your enterprise uses a custom Box
+   domain, set `BOX_EMBED_DOMAIN` to it.
 
    > **Never commit `.env`.** It is already in `.gitignore`.
 
-7. **Add your folder IDs** to `hubs.config.json`, replacing
+4. **Seed the sample content**
+
+   ```bash
+   python3 seed.py
+   ```
+
+   The script runs as the app's service account. It creates the `Admissions`
+   and `Housing` folders, uploads the fictional documents from `sample-docs/`,
+   and invites the hub admin to the folders as an editor. It then creates the
+   `Students` group and adds the test student. It writes the folder IDs to
+   `hubs.config.json` and the group ID to `.env`:
+
+   ```text
+   == Admissions ==
+   Created folder: Admissions (ID: 111111)
+   Uploaded admission-requirements.md to folder 111111
+   Uploaded application-deadlines.md to folder 111111
+   Added hub.admin@example.edu to folder 111111 as editor
+   ...
+   == Students group ==
+   Created group: Students (ID: 333333)
+   Added student@example.edu to group 333333
+
+   Wrote folder IDs to hubs.config.json and STUDENTS_GROUP_ID to .env.
+   Next, run: python3 provision_hubs.py
+   ```
+
+   You can run it again safely. It reuses the folders, files, and group it
+   finds by name.
+
+### Use your own folders and group
+
+To use your offices' existing documents instead of the sample content, skip
+`seed.py` and:
+
+1. Invite the app's service account as an **Editor** on each service folder.
+   Find its email in the Developer Console > your app > **Configuration** >
+   **App Details** sidebar > **Service Account ID** (it looks like
+   `AutomationUser_xxxxx_xxxxxx@boxdevedition.com`). Without this
+   collaboration, API calls return `404 Not Found`.
+2. Add each folder ID to `hubs.config.json`, replacing
    `<ADMISSIONS_FOLDER_ID>` and `<HOUSING_FOLDER_ID>`.
+3. Set `STUDENTS_GROUP_ID` in `.env` to the ID of an existing group of
+   students.
 
 ## Run
 
@@ -171,8 +197,8 @@ box-campus-ai-assistant/
 
 ## Try it
 
-In a browser where you are signed in to Box as a member of the students
-group, open `http://localhost:3000`.
+In a browser where you are signed in to Box as the test student, open
+`http://localhost:3000`.
 
 - On the home page, select **Ask the campus** and ask a question that one of
   your documents answers, such as "When is the move-in date?". Confirm that
@@ -184,25 +210,30 @@ group, open `http://localhost:3000`.
 
 ### Add a student service
 
-Create and share the service folder as in Setup, add an entry to
-`hubs.config.json`, and run `python3 provision_hubs.py`. The script creates the
-new hub, adds the new folder to the campus-wide hub, and updates
-`portal-config.json`. Restart the portal to display the new service.
+Add an entry to `hubs.config.json`. To seed it, add its documents to
+`sample-docs/<slug>/` and run `python3 seed.py`, which creates a folder named
+after the service's `title`. Otherwise, share your own folder with the service
+account and set its `folderId`. Then run `python3 provision_hubs.py`. The
+script creates the new hub, adds the new folder to the campus-wide hub, and
+updates `portal-config.json`. Restart the portal to display the new service.
 
 ## How it works
 
-1. `provision_hubs.py` reads `hubs.config.json` and, for each service, gets or
+1. `seed.py` creates the service folders and the students group as the
+   service account, so the service account owns them and needs no extra
+   collaboration.
+2. `provision_hubs.py` reads `hubs.config.json` and, for each service, gets or
    creates a hub, turns on Box AI, and saves the hub ID to
    `portal-config.json` right away. A run that fails partway reuses the same
    hubs next time.
-2. `hubs.py` adds only the folders that are not in the hub yet, adds the
+3. `hubs.py` adds only the folders that are not in the hub yet, adds the
    students group as a viewer and the hub admin as a co-owner, and adds the
    group as a viewer on each folder. Hub access does not grant file access, so
    the folder collaboration is required. Existing access is reported, not
    treated as an error.
-3. `portal.py` fills the page templates with the hub IDs and lists each hub's
+4. `portal.py` fills the page templates with the hub IDs and lists each hub's
    sources, cached for 5 minutes.
-4. The chat button and the chat widget run with the student's own Box
+5. The chat button and the chat widget run with the student's own Box
    session. Neither uses a shared link, so only hub collaborators can use the
    chat.
 
@@ -222,8 +253,9 @@ new hub, adds the new folder to the campus-wide hub, and updates
 | --- | --- |
 | `ModuleNotFoundError` | Activate the venv: `source .venv/bin/activate`. |
 | `invalid_client` | Check `BOX_CLIENT_ID`, `BOX_CLIENT_SECRET`, and `BOX_ENTERPRISE_ID` in `.env`, and make sure the app is authorized in the Admin Console. |
-| `404 Not Found` | Invite the service account as **Editor** on every folder in `hubs.config.json`. |
-| `403 insufficient_scope` when adding the group to a folder | Enable **Manage groups** in the Developer Console, save, and re-authorize the app. Then run the script again; it reuses the hubs it already created. |
+| `404 Not Found` | If you use your own folders, invite the service account as **Editor** on every folder in `hubs.config.json`. |
+| `seed.py` reports `No user with login ... found` | Check `TEST_STUDENT_LOGIN` in `.env`. Then enable **Manage users** in the Developer Console, save, and re-authorize the app. Without that scope, Box returns no users instead of an error. Run `seed.py` again; it reuses what it already created. |
+| `403 insufficient_scope` when creating the group or adding it to a folder | Enable **Manage groups** in the Developer Console, save, and re-authorize the app. Then run the script again; it reuses what it already created. |
 | `No such file or directory: 'portal-config.json'` | Run `python3 provision_hubs.py` first, and start the portal from the project directory. |
 | `localhost:5000` returns 403 on macOS | AirPlay Receiver uses port 5000. Keep `PORT=3000` in `.env`. |
 | The chat returns empty or generic answers | Wait a few minutes for indexing, confirm the student is in the students group, and make sure your documents contain text (scanned PDFs without OCR are not searchable). |
