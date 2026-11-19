@@ -61,6 +61,11 @@ box-campus-ai-assistant/
   - **Manage groups**, so that the scripts can create the students group and
     invite it to the service folders
   - **Manage users**, so that `seed.py` can find your test student by email
+- The app's **App Access Level** set to **App + Enterprise Access** on the
+  **Configuration** tab. With the default **App Access Only**, the app cannot
+  see the users in your enterprise, so `seed.py` cannot find your test student.
+  After you change the access level, an admin must re-authorize the app in the
+  Admin Console.
 - Every student who uses the portal needs a Box account in your enterprise and
   must be signed in to Box in the same browser.
 
@@ -254,7 +259,7 @@ updates `portal-config.json`. Restart the portal to display the new service.
 | `ModuleNotFoundError` | Activate the venv: `source .venv/bin/activate`. |
 | `invalid_client` | Check `BOX_CLIENT_ID`, `BOX_CLIENT_SECRET`, and `BOX_ENTERPRISE_ID` in `.env`, and make sure the app is authorized in the Admin Console. |
 | `404 Not Found` | If you use your own folders, invite the service account as **Editor** on every folder in `hubs.config.json`. |
-| `seed.py` reports `No user with login ... found` | Check `TEST_STUDENT_LOGIN` in `.env`. Then enable **Manage users** in the Developer Console, save, and re-authorize the app. Without that scope, Box returns no users instead of an error. Run `seed.py` again; it reuses what it already created. |
+| `seed.py` reports `No user with login ... found` | Check `TEST_STUDENT_LOGIN` in `.env`. Then, on the **Configuration** tab in the Developer Console, make sure **Manage users** is enabled and the **App Access Level** is **App + Enterprise Access**, save, and re-authorize the app. Without either setting, Box returns no users instead of an error. Run `seed.py` again; it reuses what it already created. |
 | `403 insufficient_scope` when creating the group or adding it to a folder | Enable **Manage groups** in the Developer Console, save, and re-authorize the app. Then run the script again; it reuses what it already created. |
 | `No such file or directory: 'portal-config.json'` | Run `python3 provision_hubs.py` first, and start the portal from the project directory. |
 | `localhost:5000` returns 403 on macOS | AirPlay Receiver uses port 5000. Keep `PORT=3000` in `.env`. |

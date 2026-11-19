@@ -88,7 +88,7 @@ def find_user_id(client: BoxClient, login: str) -> str:
             return user.id
     sys.exit(
         f"No user with login {login} found. Check TEST_STUDENT_LOGIN in .env, and make sure "
-        "the app has the Manage users scope. Without it, Box returns no users."
+        "the app has the Manage users scope and App + Enterprise Access. Without them, Box returns no users."
     )
 
 def add_group_member(client: BoxClient, group_id: str, login: str) -> None:
