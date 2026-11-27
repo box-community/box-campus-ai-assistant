@@ -102,7 +102,11 @@ box-campus-ai-assistant/
      You sign in as this user to test the portal.
 
    Leave `STUDENTS_GROUP_ID` empty. If your enterprise uses a custom Box
-   domain, set `BOX_EMBED_DOMAIN` to it.
+   domain, set `BOX_EMBED_DOMAIN` to it. `BOX_CHAT_BUTTON_SCRIPT` already
+   holds the URL of the Box-hosted chat button script. To check for a newer
+   version, open any hub in the Box web app, open the menu in the top-right
+   corner, select **Embed**, and on the **Hub AI Chat** tab, select **Chat
+   button**. The `src` value of the `script` tag is the current URL.
 
    > **Never commit `.env`.** It is already in `.gitignore`.
 
@@ -185,12 +189,7 @@ To use your offices' existing documents instead of the sample content, skip
    Assistant**. Allow a few minutes for Box to index the files before you test
    the chat.
 
-3. **Update the chat button script.** In the **Campus Assistant** hub, open the
-   menu in the upper-right corner and select **Embed**. On the **Hub AI Chat**
-   tab, select **Chat button**, and copy the `src` value of the `script` tag
-   into `BOX_CHAT_BUTTON_SCRIPT` in `.env`.
-
-4. **Start the portal**
+3. **Start the portal**
 
    ```bash
    python3 portal.py
@@ -203,7 +202,8 @@ To use your offices' existing documents instead of the sample content, skip
 ## Try it
 
 In a browser where you are signed in to Box as the test student, open
-`http://localhost:3000`.
+`http://localhost:3000`. Do not use a private or incognito window, because it
+does not share your Box session.
 
 - On the home page, select **Ask the campus** and ask a question that one of
   your documents answers, such as "When is the move-in date?". Confirm that
@@ -263,6 +263,8 @@ updates `portal-config.json`. Restart the portal to display the new service.
 | `403 insufficient_scope` when creating the group or adding it to a folder | Enable **Manage groups** in the Developer Console, save, and re-authorize the app. Then run the script again; it reuses what it already created. |
 | `No such file or directory: 'portal-config.json'` | Run `python3 provision_hubs.py` first, and start the portal from the project directory. |
 | `localhost:5000` returns 403 on macOS | AirPlay Receiver uses port 5000. Keep `PORT=3000` in `.env`. |
+| The chat displays "Oops! We can't seem to find what you're looking for" | The browser is not signed in to Box as a hub collaborator. Sign in to Box in the same browser, not in a private or incognito window, as a member of the students group. Without a shared link, the chat loads only for hub collaborators. |
+| The **Ask the campus** button does not display | Make sure `BOX_CHAT_BUTTON_SCRIPT` in `.env` contains only the script URL, not the whole `script` tag. If your enterprise uses a custom Box domain, set `BOX_EMBED_DOMAIN` to it and restart the portal. |
 | The chat returns empty or generic answers | Wait a few minutes for indexing, confirm the student is in the students group, and make sure your documents contain text (scanned PDFs without OCR are not searchable). |
 
 ## License
